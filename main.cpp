@@ -5,7 +5,25 @@
 using namespace std;
 
 void version1(){
-
+    int opcion;
+    cout << "Ingrese opcion: " << endl;
+    cout << "1) Iniciar sesion como administrador" << endl;
+    cout << "2) Iniciar sesion como usuario" << endl;
+    cout << "3) Registrar administrador" << endl;
+    cin >> opcion;
+    switch(opcion){
+        case 1:
+            iniciarSesionAdminArr();
+            break;
+        case 2:
+            // iniciarSesionUsuario();
+            break;
+        case 3:
+            registrarAdminArr();
+            break;
+        default:
+            cout << "Opcion no valida" << endl;
+    }
 }
 
 void version2(){
