@@ -5,9 +5,11 @@ CONFIG -= qt
 
 SOURCES += \
         arreglos.cpp \
+        excepciones.cpp \
         main.cpp \
         string.cpp
 
 HEADERS += \
     arreglos.h \
+    excepciones.h \
     string.h

@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <fstream>
 #include "arreglos.h"
+#include "excepciones.h"
 
 using namespace std;
 
@@ -295,36 +296,42 @@ void registrarUsuarioArr(){
     char usuario[11];
     char contrasena[5];
     long int saldo;
+
     cout << "Ingrese numero de cedula: ";
     cin >> usuario;
 
     //condicional para verificar si ya existe un archivo para ese usuario, en caso contrario, crear el archivo
     ifstream archivo(usuario, ios::binary);
     if(archivo.is_open()){
-        cout << "El usuario ya esta registrado" << endl;
         archivo.close();
-        return;
+        errorAutenticacion("El usuario ya está registrado");
+
     }
-    else{
-        cout << "Ingrese contrasena: ";
-        cin >> contrasena;
-        cout << "Ingrese Saldo: ";
-        cin >> saldo;
-        archivo.close();
-        ofstream archivoSalida(usuario, ios::binary);
-        archivoSalida.write(usuario, sizeof(usuario));
-        archivoSalida.write(contrasena, sizeof(contrasena));
-        archivoSalida.write((char*)&saldo, sizeof(saldo));
-        archivoSalida.close();
-        cout << "Usuario registrado exitosamente" << endl;
-        codificacion2(usuario);
+
+    cout << "Ingrese contrasena: ";
+    cin >> contrasena;
+    cout << "Ingrese Saldo: ";
+    cin >> saldo;
+
+    ofstream archivoSalida(usuario, ios::binary);
+    if(!archivoSalida.is_open()){
+        errorArchivo(usuario);
     }
-}
+
+    archivoSalida.write(usuario, sizeof(usuario));
+    archivoSalida.write(contrasena, sizeof(contrasena));
+    archivoSalida.write((char*)&saldo, sizeof(saldo));
+    archivoSalida.close();
+
+    cout << "Usuario registrado exitosamente" << endl;
+    codificacion2(usuario);
+    }
 
 //Iniciar Sesion como Administrador
 void iniciarSesionAdminArr(){
     char usuario[20];
     char contrasena[20];
+
     cout << "Ingrese nombre de usuario: ";
     cin >> usuario;
     cout << "Ingrese contrasena: ";
@@ -334,9 +341,14 @@ void iniciarSesionAdminArr(){
 
     //leer archivo sudo.txt y verificar si el usuario y contrasena son correctos
     ifstream archivo("sudo.txt");
+    if(!archivo.is_open()){
+        errorArchivo("sudo.txt");
+    }
+
     char usuarioArchivo[20];
     char contrasenaArchivo[20];
     bool encontrado = false;
+
     while(archivo >> usuarioArchivo >> contrasenaArchivo){
         if(compararCadenas(usuario, usuarioArchivo) && compararCadenas(contrasena, contrasenaArchivo)){
             encontrado = true;
@@ -348,72 +360,88 @@ void iniciarSesionAdminArr(){
 
     codificacion1("sudo.txt");
 
-    if(encontrado){
-        int opcion;
-        cout << "Inicio de sesion exitoso" << endl;
-        cout << "Bienvenido, " << usuario << endl;
-        cout << "Ingrese la operacion que desea realizar: " << endl;
-        cout << "1) Registrar usuario" << endl;
-        cout << "2) Salir" << endl;
-        cin >> opcion;
-        switch(opcion){
-            case 1:
-                registrarUsuarioArr();
-                break;
-            case 2:
-                cout << "Saliendo..." << endl;
-                break;
-            default:
-                cout << "Opcion no valida" << endl;
-        }
-    } else {
-        cout << "Usuario o contrasena incorrectos" << endl;
+    if(!encontrado){
+        errorAutenticacion(usuario);
+    }
+
+    int opcion;
+    cout << "Inicio de sesion exitoso" << endl;
+    cout << "Bienvenido, " << usuario << endl;
+    cout << "Ingrese la operacion que desea realizar: " << endl;
+    cout << "1) Registrar usuario" << endl;
+    cout << "2) Salir" << endl;
+    cin >> opcion;
+
+    switch(opcion){
+        case 1:
+            registrarUsuarioArr();
+            break;
+        case 2:
+            cout << "Saliendo..." << endl;
+            break;
+        default:
+            errorEntrada("Opción no válida en menú de administrador");
     }
 }
 
-void iniciarSesionUsuarioArr()
-{
+void iniciarSesionUsuarioArr(){
     char usuario[11];
     char contrasena[5];
+
     cout << "Ingrese numero de cedula: ";
     cin >> usuario;
     cout << "Ingrese contrasena: ";
     cin >> contrasena;
+
     decodificacion2(usuario);
+
     ifstream archivo(usuario, ios::binary);
     if(!archivo.is_open()){
-        cout << "No se pudo abrir el archivo" << endl;
-        return;
+        codificacion2(usuario);
+        errorArchivo(usuario);
     }
+
     char usuarioArchivo[11];
     char contrasenaArchivo[5];
     long int saldo;
+
     archivo.read(usuarioArchivo, sizeof(usuarioArchivo));
     archivo.read(contrasenaArchivo, sizeof(contrasenaArchivo));
     archivo.read((char*)&saldo, sizeof(saldo));
     archivo.close();
 
-    if(compararCadenas(usuario, usuarioArchivo) && compararCadenas(contrasena, contrasenaArchivo)){
-        int opcion;
-        cout << "Inicio de sesion exitoso" << endl;
-        cout << "Bienvenido, " << usuario << endl;
-        cout << "Su saldo es: " << saldo << endl;
-        cout << "Ingrese la operacion que desea realizar: " << endl;
-        cout << "1) Consultar saldo" << endl;
-        cout << "2) Retirar" << endl;
-        cout << "3) Salir" << endl;
-        cin >> opcion;
+    if(compararCadenas(usuario, usuarioArchivo) || compararCadenas(contrasena, contrasenaArchivo)){
+        codificacion2(usuario);
+        errorAutenticacion(usuario);
+    }
 
-        switch(opcion){
+    int opcion;
+    cout << "Inicio de sesion exitoso" << endl;
+    cout << "Bienvenido, " << usuario << endl;
+    cout << "Su saldo es: " << saldo << endl;
+    cout << "Ingrese la operacion que desea realizar: " << endl;
+    cout << "1) Consultar saldo" << endl;
+    cout << "2) Retirar" << endl;
+    cout << "3) Salir" << endl;
+    cin >> opcion;
+
+    switch(opcion){
         case 1: {
             saldo -= 1000;
             cout << "Su saldo es: " << saldo << endl;
             cout << "Se ha hecho un cobro de 1000 por la consulta" << endl;
+
             ofstream archivo(usuario, ios::binary);
+            if(!archivo.is_open()){
+                codificacion2(usuario);
+                errorArchivo(usuario);
+            }
+
             archivo.write(usuarioArchivo, sizeof(usuarioArchivo));
             archivo.write(contrasenaArchivo, sizeof(contrasenaArchivo));
             archivo.write((char*)&saldo, sizeof(saldo));
             archivo.close();
+
             codificacion2(usuario);
             break;
         }
@@ -423,18 +451,27 @@ void iniciarSesionUsuarioArr()
             cout << "El costo de la transaccion es de $1000" << endl;
             cout << "Ingrese monto a retirar: ";
             cin >> retiro;
+
             if(retiro > saldo){
-                cout << "No tiene suficiente saldo" << endl;
-            } else {
-                saldo -= retiro + 1000;
-                cout << "Retiro exitoso. Su nuevo saldo es: " << saldo << endl;
-                ofstream archivo(usuario, ios::binary);
-                archivo.write(usuarioArchivo, sizeof(usuarioArchivo));
-                archivo.write(contrasenaArchivo, sizeof(contrasenaArchivo));
-                archivo.write((char*)&saldo, sizeof(saldo));
-                archivo.close();
                 codificacion2(usuario);
+                errorEntrada("Saldo insuficiente para el retiro");
             }
+
+            saldo -= retiro + 1000;
+            cout << "Retiro exitoso. Su nuevo saldo es: " << saldo << endl;
+
+            ofstream archivo(usuario, ios::binary);
+            if (!archivo.is_open()) {
+                codificacion2(usuario);
+                errorArchivo(usuario);
+            }
+
+            archivo.write(usuarioArchivo, sizeof(usuarioArchivo));
+            archivo.write(contrasenaArchivo, sizeof(contrasenaArchivo));
+            archivo.write((char*)&saldo, sizeof(saldo));
+            archivo.close();
+
+            codificacion2(usuario);
             break;
         }
 
@@ -445,11 +482,8 @@ void iniciarSesionUsuarioArr()
         }
 
         default: {
-            cout << "Opcion no valida" << endl;
+            codificacion2(usuario);
+            errorEntrada("Opción no válida en menú de usuario");
         }
-        }
-    } else {
-        cout << "Usuario o contrasena incorrectos" << endl;
-        codificacion2(usuario);
     }
 }
