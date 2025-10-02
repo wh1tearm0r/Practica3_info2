@@ -3,5 +3,6 @@
 
 void registrarAdminArr();
 void iniciarSesionAdminArr();
+void iniciarSesionUsuarioArr();
 
 #endif // ARREGLOS_H

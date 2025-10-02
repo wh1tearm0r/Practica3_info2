@@ -16,7 +16,7 @@ void version1(){
             iniciarSesionAdminArr();
             break;
         case 2:
-            // iniciarSesionUsuario();
+            iniciarSesionUsuarioArr();
             break;
         case 3:
             registrarAdminArr();
